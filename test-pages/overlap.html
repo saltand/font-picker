@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DOM Hover Highlighter Test</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 160vh;
+        font-family: system-ui, sans-serif;
+        background: #f5f6f8;
+      }
+
+      main {
+        padding: 48px;
+      }
+
+      .stage {
+        position: relative;
+        width: 520px;
+        height: 360px;
+        border: 1px solid #ccd3df;
+        background: white;
+      }
+
+      .box {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        color: white;
+        font-weight: 700;
+      }
+
+      .bottom {
+        inset: 56px auto auto 56px;
+        width: 300px;
+        height: 190px;
+        background: #227c70;
+      }
+
+      .middle {
+        inset: 106px auto auto 146px;
+        width: 290px;
+        height: 180px;
+        background: #b35c1e;
+      }
+
+      .top {
+        inset: 154px auto auto 246px;
+        width: 220px;
+        height: 140px;
+        background: #3949ab;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>DOM Hover Highlighter Test</h1>
+      <p>Click the extension icon, hover the overlapping boxes, press Shift/Ctrl, and press Esc to exit.</p>
+      <section class="stage">
+        <div class="box bottom">Bottom</div>
+        <div class="box middle">Middle</div>
+        <div class="box top">Top</div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,9 +1,29 @@
 # DOM Hover Highlighter
 
-A minimal WXT Chrome MV3 extension that highlights DOM elements while hovering
-and shows the selected element's rendered fonts.
+DOM Hover Highlighter is a WXT-based Chrome MV3 extension for inspecting page
+elements and the fonts they actually render with.
 
-## Commands
+## Browser Support
+
+This extension only supports Google Chrome.
+
+It relies on Chrome's `debugger` permission and Chrome DevTools Protocol method
+`CSS.getPlatformFontsForNode` to read rendered font data. Firefox and other
+browsers are not supported.
+
+## Features
+
+- Click the toolbar icon to enter hover inspection mode.
+- Hover a DOM element to draw a border around it.
+- Inspect rendered font details including family name, PostScript name, font
+  origin, and glyph count.
+- Use `ArrowDown` and `ArrowUp` to move through overlapping elements.
+- Press `Esc`, left-click, or right-click to exit inspection mode.
+- Content script is injected on demand after the toolbar icon is clicked.
+- UI strings are localized with WebExtension `_locales` for English,
+  Simplified Chinese, and Traditional Chinese.
+
+## Development
 
 ```sh
 pnpm install
@@ -12,16 +32,8 @@ pnpm run build
 
 Load `.output/chrome-mv3` as an unpacked extension in Chrome.
 
-The extension uses Chrome's `debugger` permission to read rendered font data
-through the Chrome DevTools Protocol. Chrome may show a debugging notice while
-font data is being read.
-
-The extension UI is localized with WebExtension `_locales`. English is the
-default; Simplified Chinese and Traditional Chinese are used automatically when
-Chrome's UI locale is Chinese.
-
-The highlighter content script is injected on demand after the toolbar icon is
-clicked. It is not loaded automatically on every page.
+Chrome may show a debugging notice while rendered font data is being read. This
+is expected and cannot be hidden by the extension.
 
 ## Manual Test Page
 

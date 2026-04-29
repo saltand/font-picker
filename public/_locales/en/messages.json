@@ -1,0 +1,61 @@
+{
+  "extensionName": {
+    "message": "DOM Hover Highlighter"
+  },
+  "extensionDescription": {
+    "message": "Highlight DOM elements and inspect rendered fonts while hovering."
+  },
+  "extensionActionTitle": {
+    "message": "Highlight DOM elements"
+  },
+  "renderedFontsLoading": {
+    "message": "Rendered fonts: loading..."
+  },
+  "renderedFontsUnavailable": {
+    "message": "Rendered fonts unavailable."
+  },
+  "renderedFontsUnavailableWithError": {
+    "message": "Rendered fonts unavailable: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "renderedFonts": {
+    "message": "Rendered fonts"
+  },
+  "noneReported": {
+    "message": "none reported"
+  },
+  "computedFamily": {
+    "message": "Computed family"
+  },
+  "computedSize": {
+    "message": "Computed size"
+  },
+  "computedStyle": {
+    "message": "Computed style"
+  },
+  "familyName": {
+    "message": "Family name"
+  },
+  "postScriptName": {
+    "message": "PostScript name"
+  },
+  "fontOrigin": {
+    "message": "Font origin"
+  },
+  "webFont": {
+    "message": "Web font"
+  },
+  "localFile": {
+    "message": "Local file"
+  },
+  "glyphs": {
+    "message": "glyphs"
+  },
+  "unavailable": {
+    "message": "Unavailable"
+  }
+}

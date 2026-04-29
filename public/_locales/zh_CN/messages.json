@@ -1,0 +1,61 @@
+{
+  "extensionName": {
+    "message": "DOM 悬浮高亮器"
+  },
+  "extensionDescription": {
+    "message": "悬浮时高亮 DOM 元素并查看实际渲染字体。"
+  },
+  "extensionActionTitle": {
+    "message": "高亮 DOM 元素"
+  },
+  "renderedFontsLoading": {
+    "message": "渲染字体：加载中..."
+  },
+  "renderedFontsUnavailable": {
+    "message": "无法获取渲染字体。"
+  },
+  "renderedFontsUnavailableWithError": {
+    "message": "无法获取渲染字体：$ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "renderedFonts": {
+    "message": "渲染字体"
+  },
+  "noneReported": {
+    "message": "未报告"
+  },
+  "computedFamily": {
+    "message": "计算字体族"
+  },
+  "computedSize": {
+    "message": "计算字号"
+  },
+  "computedStyle": {
+    "message": "计算样式"
+  },
+  "familyName": {
+    "message": "字体族"
+  },
+  "postScriptName": {
+    "message": "PostScript"
+  },
+  "fontOrigin": {
+    "message": "字体来源"
+  },
+  "webFont": {
+    "message": "网络字体"
+  },
+  "localFile": {
+    "message": "本地文件"
+  },
+  "glyphs": {
+    "message": "个字形"
+  },
+  "unavailable": {
+    "message": "不可用"
+  }
+}

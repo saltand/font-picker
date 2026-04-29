@@ -2,13 +2,21 @@ import { defineConfig } from 'wxt';
 
 export default defineConfig({
   manifestVersion: 3,
+  hooks: {
+    'build:manifestGenerated': (_, manifest) => {
+      if (Array.isArray(manifest.content_scripts) && manifest.content_scripts.length === 0) {
+        delete manifest.content_scripts;
+      }
+    },
+  },
   manifest: {
-    name: 'DOM Hover Highlighter',
-    description: 'Highlight DOM elements by hovering after clicking the extension icon.',
+    name: '__MSG_extensionName__',
+    description: '__MSG_extensionDescription__',
     version: '0.1.0',
-    permissions: ['activeTab', 'scripting'],
+    default_locale: 'en',
+    permissions: ['activeTab', 'scripting', 'debugger'],
     action: {
-      default_title: 'Highlight DOM elements',
+      default_title: '__MSG_extensionActionTitle__',
     },
   },
 });

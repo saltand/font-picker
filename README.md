@@ -3,7 +3,7 @@
 Font Picker is a WXT-based Chrome MV3 extension for inspecting page elements and
 the fonts they actually render with.
 
-![Font Picker screenshot](assets/Snipaste_2026-04-30_17-17-05.jpg)
+![Font Picker hero image](assets/readme-hero.png)
 
 ## Browser Support
 
@@ -29,8 +29,7 @@ browsers are not supported.
 
 ```sh
 pnpm install
-pnpm run check
-pnpm run build
+pnpm dev
 ```
 
 To bump the patch version in `package.json`:

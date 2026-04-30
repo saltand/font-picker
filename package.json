@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "wxt",
     "build": "wxt build",
+    "check": "tsc --noEmit",
+    "bump": "pnpm version patch --no-git-tag-version",
     "zip": "wxt zip",
     "postinstall": "wxt prepare"
   },

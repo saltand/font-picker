@@ -1,9 +1,11 @@
 # Font Picker
 
+![Font Picker hero image](assets/readme-hero.png)
+
 Font Picker is a WXT-based Chrome MV3 extension for inspecting page elements and
 the fonts they actually render with.
 
-![Font Picker hero image](assets/readme-hero.png)
+![Font Picker screenshot](assets/Snipaste_2026-04-30_17-17-05.jpg)
 
 ## Browser Support
 
@@ -37,6 +39,17 @@ To bump the patch version in `package.json`:
 ```sh
 pnpm run bump
 ```
+
+GitHub Releases are created from version tags. After bumping the version, create
+and push a matching tag:
+
+```sh
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+The GitHub Action builds the Chrome MV3 extension, creates the WXT zip, and
+uploads the zip to the tag's GitHub Release.
 
 Load `.output/chrome-mv3` as an unpacked extension in Chrome.
 

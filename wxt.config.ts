@@ -17,6 +17,13 @@ export default defineConfig({
     permissions: ['activeTab', 'scripting', 'debugger'],
     action: {
       default_title: '__MSG_extensionActionTitle__',
+      default_icon: {
+        16: 'icons/16.png',
+        32: 'icons/32.png',
+        48: 'icons/48.png',
+        96: 'icons/96.png',
+        128: 'icons/128.png',
+      },
     },
   },
 });

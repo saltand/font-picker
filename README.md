@@ -1,9 +1,9 @@
-# DOM Hover Highlighter
+# Font Picker
 
-DOM Hover Highlighter is a WXT-based Chrome MV3 extension for inspecting page
-elements and the fonts they actually render with.
+Font Picker is a WXT-based Chrome MV3 extension for inspecting page elements and
+the fonts they actually render with.
 
-![DOM Hover Highlighter screenshot](assets/Snipaste_2026-04-30_17-17-05.jpg)
+![Font Picker screenshot](assets/Snipaste_2026-04-30_17-17-05.jpg)
 
 ## Browser Support
 

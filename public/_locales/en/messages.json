@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "DOM Hover Highlighter"
+    "message": "Font Picker"
   },
   "extensionDescription": {
     "message": "Highlight DOM elements and inspect rendered fonts while hovering."

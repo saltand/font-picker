@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "DOM 悬浮高亮器"
+    "message": "Font Picker"
   },
   "extensionDescription": {
     "message": "悬浮时高亮 DOM 元素并查看实际渲染字体。"

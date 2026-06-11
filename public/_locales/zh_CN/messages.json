@@ -3,10 +3,10 @@
     "message": "Font Picker"
   },
   "extensionDescription": {
-    "message": "悬浮时高亮 DOM 元素并查看实际渲染字体。"
+    "message": "查看元素实际渲染字体"
   },
   "extensionActionTitle": {
-    "message": "高亮 DOM 元素"
+    "message": "高亮元素"
   },
   "renderedFontsLoading": {
     "message": "渲染字体：加载中..."

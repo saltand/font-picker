@@ -57,5 +57,14 @@
   },
   "unavailable": {
     "message": "不可用"
+  },
+  "highlighterHint": {
+    "message": "方向键上下切换元素层级，右键复制"
+  },
+  "copied": {
+    "message": "已复制"
+  },
+  "copyFailed": {
+    "message": "复制失败"
   }
 }

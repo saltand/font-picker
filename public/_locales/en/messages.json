@@ -57,5 +57,14 @@
   },
   "unavailable": {
     "message": "Unavailable"
+  },
+  "highlighterHint": {
+    "message": "Up/Down: switch element level, right-click: copy"
+  },
+  "copied": {
+    "message": "Copied"
+  },
+  "copyFailed": {
+    "message": "Copy failed"
   }
 }

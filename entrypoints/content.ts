@@ -23,6 +23,7 @@ type ComputedFontInfo = {
 
 const overlayId = 'dom-hover-highlighter-overlay';
 const fontPanelId = 'dom-hover-highlighter-font-panel';
+const hintId = 'dom-hover-highlighter-hint';
 const overlayOwnerAttribute = 'data-dom-hover-highlighter-owner';
 const targetMarkerAttribute = 'data-dom-hover-highlighter-target';
 const targetMarkerPrefix = 'dom-hover-highlighter-target-';
@@ -59,18 +60,42 @@ const fontPanelStyle = {
   whiteSpace: 'normal',
   zIndex: '2147483647',
 } satisfies Partial<CSSStyleDeclaration>;
+const hintStyle = {
+  background: 'rgba(47, 125, 246, 0.96)',
+  border: '1px solid rgba(255, 255, 255, 0.35)',
+  borderRadius: '6px',
+  boxShadow: '0 8px 20px rgba(0, 0, 0, 0.22)',
+  color: '#ffffff',
+  display: 'none',
+  fontFamily:
+    'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  fontSize: '12px',
+  fontWeight: '600',
+  left: '0',
+  lineHeight: '1.35',
+  maxWidth: 'min(420px, calc(100vw - 16px))',
+  padding: '5px 8px',
+  pointerEvents: 'none',
+  position: 'fixed',
+  top: '0',
+  whiteSpace: 'nowrap',
+  zIndex: '2147483647',
+} satisfies Partial<CSSStyleDeclaration>;
 
 let active = false;
 let overlay: HTMLDivElement | undefined;
 let fontPanel: HTMLDivElement | undefined;
+let hint: HTMLDivElement | undefined;
 let lastMouseX = 0;
 let lastMouseY = 0;
 let candidates: Element[] = [];
 let selectedIndex = 0;
 let markedElement: Element | undefined;
 let currentFontTarget: Element | undefined;
+let currentCopyText: string | undefined;
 let fontRequestId = 0;
 let fontLookupTimeout: number | undefined;
+let copiedFeedbackTimeout: number | undefined;
 
 export default defineContentScript({
   matches: ['http://*/*', 'https://*/*'],
@@ -91,8 +116,10 @@ function startHighlighter() {
   active = true;
   overlay = createOverlay();
   fontPanel = createFontPanel();
+  hint = createHint();
   document.documentElement.append(overlay);
   document.documentElement.append(fontPanel);
+  document.documentElement.append(hint);
 
   window.addEventListener('mousemove', onMouseMove, true);
   window.addEventListener('pointerdown', onPointerDown, true);
@@ -100,8 +127,9 @@ function startHighlighter() {
   window.addEventListener('mousedown', onMouseDown, true);
   window.addEventListener('mouseup', onMouseFollowup, true);
   window.addEventListener('click', onMouseFollowup, true);
+  window.addEventListener('dblclick', onMouseFollowup, true);
   window.addEventListener('auxclick', onMouseFollowup, true);
-  window.addEventListener('contextmenu', onMouseFollowup, true);
+  window.addEventListener('contextmenu', onContextMenu, true);
   window.addEventListener('keydown', onKeyDown, true);
   window.addEventListener('scroll', refreshHighlight, true);
   window.addEventListener('resize', refreshHighlight, true);
@@ -114,7 +142,9 @@ function stopHighlighter() {
   candidates = [];
   selectedIndex = 0;
   currentFontTarget = undefined;
+  currentCopyText = undefined;
   clearFontLookupTimeout();
+  clearCopiedFeedbackTimeout();
   clearMarkedElement();
 
   window.removeEventListener('mousemove', onMouseMove, true);
@@ -123,16 +153,19 @@ function stopHighlighter() {
   window.removeEventListener('mousedown', onMouseDown, true);
   window.removeEventListener('mouseup', onMouseFollowup, true);
   window.removeEventListener('click', onMouseFollowup, true);
+  window.removeEventListener('dblclick', onMouseFollowup, true);
   window.removeEventListener('auxclick', onMouseFollowup, true);
-  window.removeEventListener('contextmenu', onMouseFollowup, true);
+  window.removeEventListener('contextmenu', onContextMenu, true);
   window.removeEventListener('keydown', onKeyDown, true);
   window.removeEventListener('scroll', refreshHighlight, true);
   window.removeEventListener('resize', refreshHighlight, true);
 
   overlay?.remove();
   fontPanel?.remove();
+  hint?.remove();
   overlay = undefined;
   fontPanel = undefined;
+  hint = undefined;
 
   browser.runtime.sendMessage({ type: 'DOM_HIGHLIGHTER_STOP' }).catch(() => undefined);
 }
@@ -157,8 +190,19 @@ function createFontPanel() {
   return element;
 }
 
+function createHint() {
+  const element = document.createElement('div');
+  element.id = hintId;
+  element.setAttribute(overlayOwnerAttribute, instanceId);
+  element.setAttribute('aria-hidden', 'true');
+  element.textContent = getMessage('highlighterHint');
+  Object.assign(element.style, hintStyle);
+  element.style.transition = getPanelTransition();
+  return element;
+}
+
 function removeExistingChrome() {
-  document.querySelectorAll(`#${overlayId}, #${fontPanelId}`).forEach((element) => {
+  document.querySelectorAll(`#${overlayId}, #${fontPanelId}, #${hintId}`).forEach((element) => {
     element.remove();
   });
 }
@@ -215,17 +259,11 @@ function onKeyDown(event: KeyboardEvent) {
 }
 
 function onMouseDown(event: MouseEvent) {
-  if (event.button !== 0 && event.button !== 2) return;
-
   blockEvent(event);
-  stopHighlighter();
 }
 
 function onPointerDown(event: PointerEvent) {
-  if (event.button !== 0 && event.button !== 2) return;
-
   blockEvent(event);
-  stopHighlighter();
 }
 
 function onMouseFollowup(event: MouseEvent) {
@@ -234,6 +272,13 @@ function onMouseFollowup(event: MouseEvent) {
 
 function onPointerFollowup(event: PointerEvent) {
   blockEvent(event);
+}
+
+function onContextMenu(event: MouseEvent) {
+  blockEvent(event);
+  copySelectedFontInfo().catch(() => {
+    showCopyFeedback(getMessage('copyFailed'));
+  });
 }
 
 function blockEvent(event: Event) {
@@ -286,8 +331,10 @@ function renderHighlight() {
   const target = candidates[selectedIndex];
   if (!target) {
     overlay.style.display = 'none';
+    hideHint();
     hideFontPanel();
     currentFontTarget = undefined;
+    currentCopyText = undefined;
     clearFontLookupTimeout();
     clearMarkedElement();
     return;
@@ -299,8 +346,21 @@ function renderHighlight() {
   overlay.style.width = `${Math.round(rect.width)}px`;
   overlay.style.height = `${Math.round(rect.height)}px`;
 
+  positionHint(rect);
   positionFontPanel(rect);
   queueRenderedFontLookup(target);
+}
+
+function positionHint(rect: DOMRect) {
+  if (!hint || !ownsChrome()) return;
+
+  hint.style.display = 'block';
+  const hintWidth = hint.offsetWidth || 260;
+  const hintHeight = hint.offsetHeight || 28;
+  const left = Math.min(Math.max(8, rect.left), Math.max(8, window.innerWidth - hintWidth - 8));
+  const top = Math.max(8, rect.top - hintHeight - 8);
+
+  hint.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
 }
 
 function positionFontPanel(rect: DOMRect) {
@@ -315,6 +375,12 @@ function positionFontPanel(rect: DOMRect) {
   fontPanel.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
 }
 
+function hideHint() {
+  if (!hint || !ownsChrome()) return;
+
+  hint.style.display = 'none';
+}
+
 function hideFontPanel() {
   if (!fontPanel || !ownsChrome()) return;
 
@@ -326,6 +392,7 @@ function queueRenderedFontLookup(target: Element) {
   if (!fontPanel || !ownsChrome() || currentFontTarget === target) return;
 
   currentFontTarget = target;
+  currentCopyText = undefined;
   clearFontLookupTimeout();
   showFontPanelMessage(getMessage('renderedFontsLoading'));
 
@@ -381,11 +448,76 @@ function clearFontLookupTimeout() {
   fontLookupTimeout = undefined;
 }
 
+function clearCopiedFeedbackTimeout() {
+  if (copiedFeedbackTimeout === undefined) return;
+
+  window.clearTimeout(copiedFeedbackTimeout);
+  copiedFeedbackTimeout = undefined;
+}
+
 function showFontPanelMessage(message: string) {
   if (!fontPanel || !ownsChrome()) return;
 
   fontPanel.style.display = 'block';
   fontPanel.textContent = message;
+}
+
+function showCopyFeedback(message: string) {
+  if (!hint || !ownsChrome()) return;
+
+  clearCopiedFeedbackTimeout();
+  const originalMessage = getMessage('highlighterHint');
+  hint.textContent = message;
+  copiedFeedbackTimeout = window.setTimeout(() => {
+    if (hint && ownsChrome()) {
+      hint.textContent = originalMessage;
+      positionHint(candidates[selectedIndex]?.getBoundingClientRect() ?? new DOMRect());
+    }
+    copiedFeedbackTimeout = undefined;
+  }, 1100);
+}
+
+async function copySelectedFontInfo() {
+  const target = candidates[selectedIndex];
+  if (!target) return;
+
+  const text = getCopyText(target);
+  await writeClipboard(text);
+  showCopyFeedback(getMessage('copied'));
+}
+
+function getCopyText(target: Element) {
+  if (currentFontTarget === target && currentCopyText) {
+    return currentCopyText;
+  }
+
+  const probeTarget = findFontProbeElement(target) ?? target;
+  const computedFont = getComputedFontInfo(probeTarget);
+  return formatComputedFontInfo(computedFont);
+}
+
+async function writeClipboard(text: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', 'true');
+  textarea.style.left = '-9999px';
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  document.documentElement.append(textarea);
+  textarea.select();
+
+  try {
+    if (!document.execCommand('copy')) {
+      throw new Error('Copy command failed.');
+    }
+  } finally {
+    textarea.remove();
+  }
 }
 
 function findFontProbeElement(target: Element) {
@@ -435,6 +567,10 @@ function renderFontPanel(fonts: PlatformFont[], computedFont: ComputedFontInfo) 
   fontPanel.style.display = 'block';
 
   if (fonts.length === 0) {
+    currentCopyText = [
+      `${getMessage('renderedFonts')}: ${getMessage('noneReported')}`,
+      formatComputedFontInfo(computedFont),
+    ].join('\n');
     fontPanel.replaceChildren(
       createFontRow(getMessage('renderedFonts'), getMessage('noneReported')),
       createFontRow(getMessage('computedFamily'), computedFont.family),
@@ -444,7 +580,26 @@ function renderFontPanel(fonts: PlatformFont[], computedFont: ComputedFontInfo) 
     return;
   }
 
+  currentCopyText = fonts.map(formatPlatformFont).join('\n\n');
   fontPanel.replaceChildren(...fonts.flatMap((font, index) => createFontRows(font, index)));
+}
+
+function formatComputedFontInfo(computedFont: ComputedFontInfo) {
+  return [
+    `${getMessage('computedFamily')}: ${computedFont.family}`,
+    `${getMessage('computedSize')}: ${computedFont.size}`,
+    `${getMessage('computedStyle')}: ${computedFont.style} ${computedFont.weight}`,
+  ].join('\n');
+}
+
+function formatPlatformFont(font: PlatformFont) {
+  return [
+    `${getMessage('familyName')}: ${font.familyName}`,
+    `${getMessage('postScriptName')}: ${font.postScriptName || getMessage('unavailable')}`,
+    `${getMessage('fontOrigin')}: ${font.isCustomFont ? getMessage('webFont') : getMessage('localFile')} (${
+      font.glyphCount
+    } ${getMessage('glyphs')})`,
+  ].join('\n');
 }
 
 function createFontRows(font: PlatformFont, index: number) {
@@ -490,7 +645,9 @@ function ownsChrome() {
   return (
     overlay?.isConnected === true &&
     fontPanel?.isConnected === true &&
+    hint?.isConnected === true &&
     overlay.getAttribute(overlayOwnerAttribute) === instanceId &&
-    fontPanel.getAttribute(overlayOwnerAttribute) === instanceId
+    fontPanel.getAttribute(overlayOwnerAttribute) === instanceId &&
+    hint.getAttribute(overlayOwnerAttribute) === instanceId
   );
 }
